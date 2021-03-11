@@ -7,7 +7,7 @@ namespace AutoMiner
 {
     class LogService
     {
-        static int maxLines = 10000;
+        static int maxLines = 1000;
         static int lineCount = 0;
         static List<LogListener> listeners = new List<LogListener>();
 

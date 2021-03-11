@@ -15,6 +15,8 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.IO;
 using System.Windows.Threading;
+using System.ComponentModel;
+using System.Diagnostics;
 
 namespace AutoMiner
 {
@@ -40,13 +42,15 @@ namespace AutoMiner
 
         }
 
-        void Window_Closing(object sender, EventArgs e)
+        void Window_Closing(object sender, CancelEventArgs e)
         {
-            if (gpuWatcher != null)
+            if (this.isRunning)
             {
-                trexRunner.Stop();
-                gpuWatcher.Stop();
+                this.StopMining();
+                //e.Cancel = true;
             }
+            //MessageBox.Show("Stop Minning before closing" , "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+
         }
 
         Boolean ValidateTrexConfig()
@@ -85,13 +89,7 @@ namespace AutoMiner
         {
             if (isRunning)
             {
-                gpuWatcher.Stop();
-                gpuWatcher = null;
-                GpuManager.applyNotMiningOcParams();
-                Thread.Sleep(2000);
-                trexRunner.Stop();
-                isRunning = false;
-                BtStart.Content = "Start";
+                this.StopMining();
             } else
             {
                 if (!ValidateTrexConfig())
@@ -107,7 +105,23 @@ namespace AutoMiner
                 BtStart.Content = "Stop";
             }
         }
+
+        private void StopMining()
+        {
+            if (isRunning)
+            {
+                gpuWatcher.Stop();
+                gpuWatcher = null;
+                GpuManager.applyNotMiningOcParams();
+                Thread.Sleep(2000);
+                trexRunner.Stop();
+                isRunning = false;
+                BtStart.Content = "Start";
+            }
+        }
     }
+
+    
 
     class LogListenerImpl : LogListener
     {
@@ -120,23 +134,37 @@ namespace AutoMiner
         }
         public void addLine(string s)
         {
-            this.dispatcher.Invoke(() =>
+            try
             {
-                textBox.AppendText(s);
-                textBox.ScrollToEnd();
-            });
+                this.dispatcher.Invoke(() =>
+                {
+                    textBox.AppendText(s);
+                    textBox.ScrollToEnd();
+                });
+            } catch (Exception e)
+            {
+                Trace.WriteLine(e.Message);
+            }
+            
         }
 
         public void removeLine()
         {
-            this.dispatcher.Invoke(() =>
+            try
             {
-                int index = textBox.Text.IndexOf('\n');
-                if (index > 0)
+                this.dispatcher.Invoke(() =>
                 {
-                    textBox.Text = textBox.Text.Substring(index + 1);
-                }
-            });
+                    int index = textBox.Text.IndexOf('\n');
+                    if (index > 0)
+                    {
+                        textBox.Text = textBox.Text.Substring(index + 1);
+                    }
+                });
+            } catch (Exception e)
+            {
+                Trace.WriteLine(e.Message);
+            }
+            
             
         }
     }

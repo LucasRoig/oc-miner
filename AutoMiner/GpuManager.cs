@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
 using MSI.Afterburner;
+using MSI.Afterburner.Exceptions;
 
 namespace AutoMiner
 {
@@ -10,7 +11,15 @@ namespace AutoMiner
     {
         public static List<GPU> GetGPUs()
         {
-            HardwareMonitor mahm = new HardwareMonitor();
+            HardwareMonitor mahm;
+            try
+            {
+                mahm = new HardwareMonitor();
+            } catch (SharedMemoryNotFound e)
+            {
+                Trace.TraceError(e.Message);
+                throw e;
+            }
             ControlMemory macm = new ControlMemory();
             List<GPU> gpus = new List<GPU>();
             for (int i = 0; i < mahm.Header.GpuEntryCount; i++)
